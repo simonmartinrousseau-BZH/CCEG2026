@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACP — Secteurs pavillonnaires CCEG</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d1117;color:#c9d1d9;font-family:'DM Sans',sans-serif;min-height:100vh}
+.header{padding:32px 40px 24px;border-bottom:1px solid #21262d;background:linear-gradient(180deg,#161b22,#0d1117)}
+.header h1{font-size:22px;font-weight:700;color:#f0f6fc;letter-spacing:-.5px;margin-bottom:4px}
+.header .subtitle{font-size:13px;color:#8b949e;font-weight:300}
+.controls{display:flex;align-items:center;gap:12px;padding:16px 40px;background:#161b22;border-bottom:1px solid #21262d;position:sticky;top:0;z-index:100;flex-wrap:wrap}
+.controls label{font-size:13px;color:#8b949e;font-weight:500;text-transform:uppercase;letter-spacing:.8px}
+.btn-group{display:flex;gap:2px;background:#21262d;border-radius:8px;padding:3px}
+.btn-group button{padding:8px 20px;border:none;background:0 0;color:#8b949e;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;cursor:pointer;border-radius:6px;transition:all .2s}
+.btn-group button:hover{color:#c9d1d9;background:#30363d}
+.btn-group button.active{background:#388bfd;color:#fff}
+.legend-bar{display:flex;gap:6px;margin-left:24px;flex-wrap:wrap;align-items:center}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;font-family:'JetBrains Mono',monospace;color:#8b949e;padding:4px 8px;background:#21262d;border-radius:4px;cursor:pointer;transition:opacity .2s}
+.legend-item:hover{opacity:.8}
+.legend-item.dimmed{opacity:.3}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.main-wrap{display:flex;gap:0;flex-wrap:wrap}
+.acp-panel{flex:1;min-width:600px;padding:24px;position:relative}
+.circle-panel{width:320px;padding:24px;border-left:1px solid #21262d}
+.panel-title{font-size:14px;font-weight:700;color:#f0f6fc;margin-bottom:12px;letter-spacing:-.2px}
+.panel-sub{font-size:11px;color:#484f58;margin-bottom:16px}
+.tooltip{position:fixed;background:#1c2128;border:1px solid #30363d;border-radius:8px;padding:10px 14px;font-size:12px;pointer-events:none;z-index:1000;display:none;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:280px}
+.tooltip .tt-sector{font-family:'JetBrains Mono',monospace;font-weight:700;color:#f0f6fc;font-size:14px}
+.tooltip .tt-info{color:#8b949e;font-size:11px;margin-top:3px;line-height:1.6}
+.tooltip .tt-vals{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;margin-top:6px;font-size:10px;font-family:'JetBrains Mono',monospace}
+.tooltip .tt-val-label{color:#484f58}
+.tooltip .tt-val-num{color:#c9d1d9;text-align:right}
+.profiles-section{padding:24px 40px 32px;border-top:1px solid #21262d}
+.profiles-section h2{font-size:16px;font-weight:700;color:#f0f6fc;margin-bottom:20px;letter-spacing:-.3px}
+.profiles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.profile-card{background:#161b22;border:1px solid #21262d;border-radius:10px;padding:16px;transition:border-color .2s}
+.profile-card:hover{border-color:#388bfd44}
+.profile-card .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.profile-card .class-badge{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;padding:3px 10px;border-radius:6px;color:#fff}
+.profile-card .count{font-size:12px;color:#8b949e;font-family:'JetBrains Mono',monospace}
+.profile-card .typos{font-size:11px;color:#8b949e;margin-bottom:8px}
+.bar-row{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.bar-label{font-size:10px;font-family:'JetBrains Mono',monospace;color:#8b949e;width:72px;text-align:right;flex-shrink:0}
+.bar-track{flex:1;height:14px;background:#21262d;border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .4s}
+.bar-value{font-size:10px;font-family:'JetBrains Mono',monospace;color:#c9d1d9;width:28px;flex-shrink:0}
+.axes-toggle{display:flex;gap:2px;background:#21262d;border-radius:8px;padding:3px;margin-left:12px}
+.axes-toggle button{padding:6px 14px;border:none;background:0 0;color:#8b949e;font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;border-radius:5px;transition:all .2s}
+.axes-toggle button:hover{color:#c9d1d9;background:#30363d}
+.axes-toggle button.active{background:#238636;color:#fff}
+.footer-note{padding:16px 40px 32px;font-size:11px;color:#484f58;line-height:1.6}
+svg text{user-select:none}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Analyse en Composantes Principales — Secteurs pavillonnaires</h1>
+  <div class="subtitle">CCEG · 149 secteurs · ACP sur matrice de corrélation · 8 méta-critères</div>
+</div>
+
+<div class="controls">
+  <label>Classes</label>
+  <div class="btn-group">
+    <button onclick="setCut('c4')" id="btn-c4">4 classes</button>
+    <button onclick="setCut('c6')" id="btn-c6">6 classes</button>
+    <button onclick="setCut('c8')" id="btn-c8" class="active">8 classes</button>
+  </div>
+  <label style="margin-left:16px">Axes</label>
+  <div class="axes-toggle">
+    <button onclick="setAxes('f1','f2')" id="ax-12" class="active">F1 × F2</button>
+    <button onclick="setAxes('f1','f3')" id="ax-13">F1 × F3</button>
+  </div>
+  <div class="legend-bar" id="legend"></div>
+</div>
+
+<div class="main-wrap">
+  <div class="acp-panel" id="acp-panel"></div>
+  <div class="circle-panel">
+    <div class="panel-title">Cercle des corrélations</div>
+    <div class="panel-sub">Projection des variables sur le plan factoriel</div>
+    <div id="circle-container"></div>
+  </div>
+</div>
+
+<div class="profiles-section">
+  <h2>Profils moyens des classes</h2>
+  <div class="profiles-grid" id="profiles-grid"></div>
+</div>
+
+<div class="footer-note">
+  ACP sur matrice de corrélation (données centrées-réduites). F1 (30,5%) : dynamisme urbain et complexité morphologique. F2 (17,6%) : cadre de vie paysager vs. intégration urbaine. F3 (14,2%) : densité des pleins. Proto-typologies : DF = Diffus Faubourg, DHC = Diffus Hameau/Corps de ferme, PC = Pavillonnaire en Continuité, PEX = Pavillonnaire Ex nihilo.
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const D = {"points":[{"s":283,"f1":-1.013,"f2":1.316,"f3":-0.069,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Petit-Mars","vals":[3.0,1.55,2.55,2.45,1.55,1.25,2.57,3.51]},{"s":274,"f1":-1.205,"f2":0.715,"f3":-2.352,"c4":4,"c6":6,"c8":8,"t":"PEX","co":"Petit-Mars","vals":[2.0,1.52,1.32,3.36,2.0,1.15,1.32,3.31]},{"s":287,"f1":-2.351,"f2":-1.822,"f3":-0.2,"c4":2,"c6":2,"c8":3,"t":"PC","co":"Fay-de-Bretagne","vals":[5.0,1.32,1.9,1.32,1.32,1.0,1.38,2.29]},{"s":290,"f1":-0.929,"f2":0.957,"f3":-1.197,"c4":1,"c6":1,"c8":1,"t":"PC","co":"Fay-de-Bretagne","vals":[3.0,1.52,2.35,3.66,1.74,1.25,2.98,2.5]},{"s":289,"f1":2.737,"f2":-2.532,"f3":-0.154,"c4":3,"c6":3,"c8":5,"t":"PC","co":"Fay-de-Bretagne","vals":[5.0,3.95,2.35,2.45,4.57,3.0,1.89,2.13]},{"s":237,"f1":0.089,"f2":-0.716,"f3":-0.201,"c4":4,"c6":4,"c8":6,"t":"DHC - PEX","co":"Casson","vals":[3.0,2.72,2.35,2.21,3.37,1.25,1.41,2.99]},{"s":248,"f1":-1.64,"f2":0.542,"f3":-0.705,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Casson","vals":[4.0,1.0,1.32,1.57,1.55,1.15,2.09,3.51]},{"s":238,"f1":2.111,"f2":-2.206,"f3":1.53,"c4":3,"c6":3,"c8":5,"t":"PC","co":"Casson","vals":[5.0,3.17,3.37,1.73,5.0,2.3,1.54,2.77]},{"s":221,"f1":1.187,"f2":-1.144,"f3":-1.651,"c4":3,"c6":3,"c8":4,"t":"PC","co":"H\u00e9ric","vals":[5.0,3.62,1.32,2.63,1.0,3.62,2.78,2.26]},{"s":268,"f1":1.798,"f2":0.805,"f3":-0.359,"c4":3,"c6":3,"c8":5,"t":"PEX","co":"H\u00e9ric","vals":[3.0,2.35,2.35,2.91,3.37,3.18,2.55,3.51]},{"s":219,"f1":-1.527,"f2":-1.025,"f3":0.085,"c4":2,"c6":2,"c8":3,"t":"PEX","co":"H\u00e9ric","vals":[4.0,1.25,2.35,1.86,2.55,1.0,1.62,2.5]},{"s":222,"f1":-0.962,"f2":-1.516,"f3":0.602,"c4":2,"c6":2,"c8":3,"t":"PEX","co":"H\u00e9ric","vals":[5.0,1.52,2.64,1.41,1.74,2.17,1.32,2.93]},{"s":271,"f1":-2.244,"f2":-0.45,"f3":0.766,"c4":2,"c6":2,"c8":2,"t":"PEX","co":"Les Touches","vals":[2.0,1.32,3.37,2.06,1.74,1.15,1.25,2.62]},{"s":201,"f1":0.739,"f2":-1.752,"f3":0.374,"c4":3,"c6":3,"c8":4,"t":"PC","co":"Les Touches","vals":[3.0,3.37,3.0,2.34,3.37,2.3,1.64,2.07]},{"s":277,"f1":1.523,"f2":-1.268,"f3":0.163,"c4":4,"c6":4,"c8":6,"t":"PC","co":"Notre-Dame-des-Landes","vals":[4.0,3.57,2.35,1.86,3.57,2.3,1.64,3.08]},{"s":192,"f1":0.657,"f2":0.427,"f3":0.079,"c4":4,"c6":6,"c8":8,"t":"PEX","co":"Nort-sur-Erdre","vals":[4.0,1.89,3.0,3.13,2.64,2.3,2.93,2.9]},{"s":326,"f1":2.236,"f2":-1.24,"f3":0.512,"c4":3,"c6":3,"c8":5,"t":"PC","co":"Nort-sur-Erdre","vals":[4.0,3.29,3.0,2.45,3.37,3.78,2.17,2.66]},{"s":181,"f1":-0.646,"f2":-0.886,"f3":0.238,"c4":2,"c6":2,"c8":3,"t":"PEX","co":"Nort-sur-Erdre","vals":[4.0,1.0,2.64,2.21,1.9,3.18,2.23,2.2]},{"s":272,"f1":0.379,"f2":-2.465,"f3":0.986,"c4":3,"c6":3,"c8":4,"t":"PC","co":"Nort-sur-Erdre","vals":[5.0,2.35,3.37,2.11,2.64,3.03,1.94,1.73]},{"s":269,"f1":3.9,"f2":0.892,"f3":1.091,"c4":3,"c6":3,"c8":5,"t":"PC","co":"Treilli\u00e8res","vals":[4.0,3.64,3.0,2.28,4.0,4.0,3.33,4.01]},{"s":340,"f1":-0.823,"f2":1.16,"f3":1.541,"c4":4,"c6":5,"c8":7,"t":"PEX","co":"Suc\u00e9-sur-Erdre","vals":[3.0,1.15,3.37,2.0,1.9,2.17,3.9,2.43]},{"s":186,"f1":-3.012,"f2":-0.457,"f3":0.454,"c4":2,"c6":2,"c8":2,"t":"PEX","co":"Suc\u00e9-sur-Erdre","vals":[2.0,1.0,2.35,1.32,1.55,1.0,1.95,1.98]},{"s":339,"f1":-0.765,"f2":-1.405,"f3":0.514,"c4":2,"c6":2,"c8":3,"t":"PEX","co":"Suc\u00e9-sur-Erdre","vals":[4.0,1.52,2.64,1.86,3.03,1.74,1.89,2.12]},{"s":239,"f1":-2.639,"f2":-1.891,"f3":-0.911,"c4":2,"c6":2,"c8":3,"t":"PC","co":"Grandchamp-des-Fontaines","vals":[5.0,1.0,1.32,1.5,1.32,1.0,1.54,1.92]},{"s":315,"f1":0.329,"f2":-0.504,"f3":-0.585,"c4":4,"c6":4,"c8":6,"t":"PC","co":"Grandchamp-des-Fontaines","vals":[3.0,3.03,1.32,1.41,3.57,1.25,1.41,3.41]},{"s":183,"f1":-0.808,"f2":-1.215,"f3":0.255,"c4":2,"c6":2,"c8":3,"t":"PEX","co":"Suc\u00e9-sur-Erdre","vals":[5.0,1.15,2.35,1.57,1.9,2.41,1.34,3.11]},{"s":184,"f1":-0.362,"f2":-1.235,"f3":0.162,"c4":2,"c6":2,"c8":3,"t":"PEX","co":"Suc\u00e9-sur-Erdre","vals":[4.0,1.43,2.35,2.06,3.37,2.0,2.05,2.13]},{"s":176,"f1":-0.051,"f2":1.228,"f3":1.111,"c4":4,"c6":4,"c8":6,"t":"PC","co":"Saint-Mars-du-D\u00e9sert","vals":[3.0,1.89,2.35,1.19,3.37,1.15,2.94,3.65]},{"s":267,"f1":1.693,"f2":0.022,"f3":1.99,"c4":3,"c6":3,"c8":5,"t":"PEX","co":"Saint-Mars-du-D\u00e9sert","vals":[5.0,1.55,4.0,2.45,3.68,3.18,3.29,2.95]},{"s":303,"f1":0.654,"f2":-1.675,"f3":0.005,"c4":3,"c6":3,"c8":4,"t":"PC","co":"Suc\u00e9-sur-Erdre","vals":[4.0,3.29,2.35,2.06,3.03,2.17,2.16,2.04]},{"s":305,"f1":2.022,"f2":0.006,"f3":1.687,"c4":4,"c6":4,"c8":6,"t":"DHC","co":"Suc\u00e9-sur-Erdre","vals":[2.0,3.29,3.37,1.41,4.0,3.18,1.32,4.14]},{"s":243,"f1":-1.688,"f2":0.497,"f3":0.093,"c4":1,"c6":1,"c8":1,"t":"PC","co":"Casson","vals":[3.0,1.52,2.35,1.86,1.55,1.0,2.23,3.08]},{"s":329,"f1":1.891,"f2":0.472,"f3":0.206,"c4":3,"c6":3,"c8":5,"t":"PEX","co":"Casson","vals":[4.0,1.89,2.35,2.45,3.37,3.78,3.14,3.13]},{"s":212,"f1":1.977,"f2":-1.538,"f3":0.03,"c4":3,"c6":3,"c8":4,"t":"DF","co":"Fay-de-Bretagne","vals":[4.0,3.57,3.0,2.91,3.03,3.48,2.19,2.22]},{"s":217,"f1":-1.856,"f2":0.478,"f3":-1.225,"c4":1,"c6":1,"c8":1,"t":"PC","co":"Fay-de-Bretagne","vals":[2.0,1.74,1.55,2.38,1.55,1.0,2.14,2.61]},{"s":241,"f1":0.138,"f2":1.601,"f3":0.341,"c4":4,"c6":4,"c8":6,"t":"PEX","co":"Grandchamp-des-Fontaines","vals":[2.0,2.17,2.35,2.21,3.37,1.25,3.42,3.05]},{"s":296,"f1":-0.755,"f2":2.016,"f3":0.479,"c4":4,"c6":5,"c8":7,"t":"PEX","co":"Grandchamp-des-Fontaines","vals":[3.0,1.74,2.35,2.0,1.74,1.25,4.18,2.98]},{"s":240,"f1":-0.045,"f2":1.1,"f3":0.926,"c4":4,"c6":6,"c8":8,"t":"PEX","co":"Grandchamp-des-Fontaines","vals":[4.0,1.74,3.0,2.21,2.64,1.25,3.37,3.25]},{"s":220,"f1":1.29,"f2":-0.25,"f3":-0.355,"c4":4,"c6":4,"c8":6,"t":"PC","co":"H\u00e9ric","vals":[4.0,3.29,2.0,2.06,3.03,2.0,1.87,3.67]},{"s":223,"f1":-1.251,"f2":0.614,"f3":2.622,"c4":2,"c6":2,"c8":2,"t":"PEX","co":"H\u00e9ric","vals":[3.0,1.15,4.0,1.32,2.64,1.15,2.96,2.87]},{"s":226,"f1":-0.424,"f2":1.175,"f3":-0.027,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"H\u00e9ric","vals":[2.0,1.52,2.35,2.51,2.64,2.0,3.16,2.64]},{"s":190,"f1":-0.116,"f2":-1.156,"f3":0.479,"c4":3,"c6":3,"c8":4,"t":"DF","co":"Nort-sur-Erdre","vals":[2.0,3.39,3.0,1.86,1.52,3.0,1.41,2.51]},{"s":200,"f1":0.274,"f2":2.161,"f3":2.202,"c4":4,"c6":5,"c8":7,"t":"PEX","co":"Nort-sur-Erdre","vals":[2.0,1.64,4.0,2.38,3.68,1.32,4.25,2.9]},{"s":189,"f1":-0.451,"f2":0.097,"f3":-0.784,"c4":4,"c6":6,"c8":8,"t":"PEX","co":"Nort-sur-Erdre","vals":[3.0,1.64,2.0,2.94,3.37,1.15,2.86,2.07]},{"s":324,"f1":-2.314,"f2":-0.481,"f3":1.179,"c4":2,"c6":2,"c8":2,"t":"PEX","co":"Nort-sur-Erdre","vals":[3.0,1.15,3.0,1.19,1.74,1.0,1.48,2.9]},{"s":188,"f1":-1.504,"f2":0.119,"f3":0.796,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Nort-sur-Erdre","vals":[2.0,1.52,3.37,2.38,2.35,1.15,2.14,2.44]},{"s":193,"f1":-1.64,"f2":0.268,"f3":2.498,"c4":2,"c6":2,"c8":2,"t":"PEX","co":"Nort-sur-Erdre","vals":[2.0,1.32,4.0,1.32,2.64,1.15,2.57,2.51]},{"s":278,"f1":0.151,"f2":-1.312,"f3":1.763,"c4":2,"c6":2,"c8":3,"t":"PEX","co":"Notre-Dame-des-Landes","vals":[4.0,1.32,4.0,2.38,4.0,2.17,2.23,2.0]},{"s":215,"f1":0.738,"f2":0.953,"f3":-0.246,"c4":4,"c6":6,"c8":8,"t":"DHC","co":"Notre-Dame-des-Landes","vals":[4.0,2.86,2.35,2.78,2.64,1.25,3.64,2.95]},{"s":205,"f1":-3.137,"f2":-1.578,"f3":2.577,"c4":2,"c6":2,"c8":2,"t":"PEX","co":"Notre-Dame-des-Landes","vals":[2.0,1.32,4.57,1.32,1.55,1.0,1.38,1.61]},{"s":198,"f1":2.249,"f2":0.463,"f3":0.786,"c4":3,"c6":3,"c8":5,"t":"DF - PC","co":"Petit-Mars","vals":[4.0,3.29,3.0,2.63,4.0,2.17,3.73,2.82]},{"s":233,"f1":-1.682,"f2":-0.547,"f3":0.587,"c4":2,"c6":2,"c8":3,"t":"PEX","co":"Saint-Mars-du-D\u00e9sert","vals":[4.0,1.52,3.0,2.06,1.52,1.15,2.32,2.36]},{"s":178,"f1":-0.658,"f2":2.264,"f3":0.287,"c4":4,"c6":5,"c8":7,"t":"PEX","co":"Saint-Mars-du-D\u00e9sert","vals":[2.0,1.78,2.35,2.21,2.35,1.0,3.73,3.22]},{"s":310,"f1":2.892,"f2":-0.921,"f3":0.043,"c4":3,"c6":3,"c8":5,"t":"PEX","co":"Suc\u00e9-sur-Erdre","vals":[5.0,3.47,2.35,2.63,5.0,2.3,2.9,2.66]},{"s":313,"f1":-0.729,"f2":1.854,"f3":1.071,"c4":4,"c6":5,"c8":7,"t":"PEX","co":"Suc\u00e9-sur-Erdre","vals":[2.0,1.52,3.0,2.21,2.64,1.25,4.01,2.61]},{"s":307,"f1":0.123,"f2":1.638,"f3":0.028,"c4":4,"c6":4,"c8":6,"t":"DHC","co":"Suc\u00e9-sur-Erdre","vals":[3.0,1.43,2.35,2.63,3.37,1.25,3.29,3.31]},{"s":312,"f1":-1.104,"f2":2.764,"f3":0.564,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Suc\u00e9-sur-Erdre","vals":[1.0,1.52,3.0,2.45,1.74,1.15,3.07,3.79]},{"s":196,"f1":-0.126,"f2":-1.874,"f3":0.601,"c4":3,"c6":3,"c8":4,"t":"PC","co":"Les Touches","vals":[3.0,2.86,3.03,2.0,3.03,2.0,1.41,2.04]},{"s":195,"f1":-0.162,"f2":1.745,"f3":0.401,"c4":4,"c6":4,"c8":6,"t":"PEX","co":"Les Touches","vals":[2.0,1.74,2.35,2.0,2.35,2.17,3.25,3.31]},{"s":264,"f1":1.862,"f2":0.053,"f3":-1.166,"c4":3,"c6":3,"c8":5,"t":"DF","co":"Treilli\u00e8res","vals":[3.0,2.86,1.93,3.22,3.37,3.18,2.35,2.95]},{"s":254,"f1":-1.009,"f2":0.745,"f3":-0.307,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Treilli\u00e8res","vals":[2.0,1.52,2.35,2.63,2.64,1.25,2.55,2.61]},{"s":204,"f1":0.606,"f2":0.247,"f3":0.82,"c4":4,"c6":6,"c8":8,"t":"PEX","co":"Vigneux-de-Bretagne","vals":[4.0,2.0,3.0,2.45,4.0,1.15,3.07,2.78]},{"s":276,"f1":3.248,"f2":-0.358,"f3":-0.157,"c4":3,"c6":3,"c8":5,"t":"DF","co":"Vigneux-de-Bretagne","vals":[4.0,3.59,2.0,2.38,4.0,4.0,3.03,2.9]},{"s":209,"f1":-1.902,"f2":1.218,"f3":2.441,"c4":2,"c6":2,"c8":2,"t":"PEX","co":"Vigneux-de-Bretagne","vals":[2.0,1.0,4.0,1.41,1.74,1.32,3.03,2.9]},{"s":207,"f1":2.131,"f2":0.132,"f3":0.388,"c4":3,"c6":3,"c8":5,"t":"DF","co":"Vigneux-de-Bretagne","vals":[4.0,1.64,3.0,3.13,4.0,3.78,3.03,2.77]},{"s":332,"f1":0.014,"f2":-0.93,"f3":-0.376,"c4":4,"c6":4,"c8":6,"t":"DHC","co":"Petit-Mars","vals":[4.0,2.05,1.55,1.57,3.0,2.17,1.82,2.82]},{"s":197,"f1":-1.25,"f2":0.078,"f3":1.977,"c4":2,"c6":2,"c8":2,"t":"PEX","co":"Petit-Mars","vals":[3.0,1.52,4.0,1.86,2.35,1.15,2.49,2.66]},{"s":327,"f1":-0.773,"f2":1.067,"f3":0.13,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Petit-Mars","vals":[1.0,1.93,2.35,2.06,3.0,1.25,2.19,3.13]},{"s":275,"f1":1.384,"f2":-1.367,"f3":-0.392,"c4":3,"c6":3,"c8":4,"t":"PEX","co":"Fay-de-Bretagne","vals":[3.0,3.29,3.0,3.31,3.0,3.18,1.81,2.13]},{"s":236,"f1":0.557,"f2":1.999,"f3":-0.831,"c4":4,"c6":4,"c8":6,"t":"PEX","co":"Casson","vals":[2.0,1.32,1.32,2.38,2.89,3.0,3.23,3.45]},{"s":234,"f1":-2.188,"f2":-0.433,"f3":-0.553,"c4":1,"c6":1,"c8":1,"t":"PC","co":"H\u00e9ric","vals":[1.0,1.74,1.55,1.5,2.35,1.15,1.48,2.2]},{"s":211,"f1":1.108,"f2":-1.819,"f3":0.01,"c4":3,"c6":3,"c8":4,"t":"PEX","co":"H\u00e9ric","vals":[3.0,3.44,2.35,2.11,4.57,1.74,1.47,2.22]},{"s":232,"f1":-1.376,"f2":0.514,"f3":0.62,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"H\u00e9ric","vals":[1.0,1.52,3.37,2.59,2.64,1.25,1.89,2.66]},{"s":231,"f1":-1.718,"f2":-1.102,"f3":0.306,"c4":2,"c6":2,"c8":3,"t":"PEX","co":"H\u00e9ric","vals":[3.0,1.25,2.0,1.19,3.0,1.15,1.48,2.36]},{"s":182,"f1":-1.354,"f2":0.135,"f3":-0.276,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Les Touches","vals":[2.0,1.78,2.35,2.38,2.35,1.15,2.14,2.44]},{"s":316,"f1":-2.233,"f2":-1.053,"f3":-1.517,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Les Touches","vals":[2.0,1.89,1.0,1.78,2.0,1.0,1.15,2.12]},{"s":216,"f1":3.079,"f2":0.698,"f3":-1.817,"c4":3,"c6":3,"c8":5,"t":"PC - PEX","co":"Notre-Dame-des-Landes","vals":[3.0,3.59,1.55,3.72,3.37,3.78,3.07,3.08]},{"s":334,"f1":-3.03,"f2":-1.964,"f3":-0.009,"c4":2,"c6":2,"c8":3,"t":"PEX","co":"Nort-sur-Erdre","vals":[3.0,1.15,2.64,1.97,1.52,1.0,1.25,1.37]},{"s":330,"f1":1.161,"f2":0.238,"f3":-2.243,"c4":4,"c6":6,"c8":8,"t":"PC","co":"Nort-sur-Erdre","vals":[2.0,2.35,1.55,3.98,4.0,2.17,1.74,2.87]},{"s":273,"f1":-0.924,"f2":0.85,"f3":0.176,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Nort-sur-Erdre","vals":[1.0,2.3,2.35,2.0,2.64,1.25,2.63,2.61]},{"s":335,"f1":-2.182,"f2":-0.319,"f3":-0.776,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Nort-sur-Erdre","vals":[3.0,1.15,2.64,3.08,1.32,1.0,1.78,2.26]},{"s":282,"f1":2.824,"f2":-0.837,"f3":-0.392,"c4":4,"c6":4,"c8":6,"t":"PC","co":"Vigneux-de-Bretagne","vals":[4.0,3.98,2.0,2.34,4.08,3.0,2.13,3.18]},{"s":263,"f1":1.229,"f2":3.413,"f3":2.755,"c4":4,"c6":5,"c8":7,"t":"PEX","co":"Treilli\u00e8res","vals":[1.0,2.05,4.0,1.73,2.89,3.0,4.41,4.01]},{"s":266,"f1":-0.943,"f2":-0.763,"f3":-1.804,"c4":1,"c6":1,"c8":1,"t":"PC","co":"Treilli\u00e8res","vals":[3.0,2.22,1.0,2.34,2.55,1.15,1.52,2.5]},{"s":302,"f1":-1.342,"f2":-0.182,"f3":-1.777,"c4":1,"c6":1,"c8":1,"t":"DHC","co":"Suc\u00e9-sur-Erdre","vals":[1.0,2.27,1.32,2.63,2.63,1.0,1.23,2.51]},{"s":318,"f1":-0.033,"f2":-0.354,"f3":-0.477,"c4":4,"c6":4,"c8":6,"t":"PEX","co":"Suc\u00e9-sur-Erdre","vals":[4.0,2.51,2.0,2.21,2.64,1.32,2.17,2.95]},{"s":319,"f1":-0.082,"f2":0.024,"f3":-2.066,"c4":4,"c6":6,"c8":8,"t":"PEX","co":"Suc\u00e9-sur-Erdre","vals":[4.0,1.74,1.0,3.08,2.64,1.74,2.63,2.5]},{"s":320,"f1":-0.407,"f2":-2.025,"f3":-0.704,"c4":2,"c6":2,"c8":3,"t":"PEX","co":"Suc\u00e9-sur-Erdre","vals":[5.0,1.74,1.55,1.78,2.0,3.0,1.77,2.04]},{"s":291,"f1":1.438,"f2":0.445,"f3":-0.372,"c4":4,"c6":4,"c8":6,"t":"PEX","co":"Grandchamp-des-Fontaines","vals":[3.0,2.55,2.0,2.45,4.0,2.17,2.29,3.45]},{"s":298,"f1":-1.429,"f2":1.574,"f3":1.427,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Grandchamp-des-Fontaines","vals":[1.0,1.55,4.37,3.08,1.74,1.25,3.16,2.5]},{"s":314,"f1":-0.195,"f2":0.34,"f3":-0.025,"c4":1,"c6":1,"c8":1,"t":"PC","co":"Grandchamp-des-Fontaines","vals":[1.0,2.86,2.35,2.11,2.64,2.0,2.22,2.66]},{"s":227,"f1":-0.089,"f2":0.804,"f3":-0.412,"c4":4,"c6":6,"c8":8,"t":"PEX","co":"Saint-Mars-du-D\u00e9sert","vals":[4.0,1.52,2.64,3.13,1.74,2.17,2.9,3.08]},{"s":177,"f1":1.658,"f2":-2.64,"f3":0.737,"c4":3,"c6":3,"c8":4,"t":"PC","co":"Saint-Mars-du-D\u00e9sert","vals":[5.0,3.68,3.37,2.34,3.0,3.18,1.76,2.04]},{"s":230,"f1":1.697,"f2":0.309,"f3":-1.16,"c4":3,"c6":3,"c8":5,"t":"PEX","co":"Saint-Mars-du-D\u00e9sert","vals":[3.0,2.93,1.55,2.99,3.37,3.0,3.38,2.33]},{"s":187,"f1":-2.721,"f2":0.7,"f3":-0.393,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Nort-sur-Erdre","vals":[1.0,1.0,2.64,2.78,1.32,1.0,2.32,2.07]},{"s":191,"f1":-2.132,"f2":-2.036,"f3":1.002,"c4":2,"c6":2,"c8":3,"t":"PEX","co":"Nort-sur-Erdre","vals":[4.0,1.15,3.37,1.86,2.35,1.0,1.32,1.79]},{"s":194,"f1":-0.475,"f2":0.951,"f3":-0.004,"c4":4,"c6":6,"c8":8,"t":"PEX","co":"Nort-sur-Erdre","vals":[4.0,1.52,2.35,2.38,2.35,1.15,3.02,3.21]},{"s":202,"f1":1.362,"f2":-0.398,"f3":-1.343,"c4":4,"c6":4,"c8":6,"t":"PC","co":"Les Touches","vals":[4.0,3.37,1.32,2.45,3.0,2.17,2.14,3.17]},{"s":203,"f1":-1.411,"f2":0.47,"f3":0.484,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Vigneux-de-Bretagne","vals":[3.0,1.32,3.37,2.78,1.9,1.0,2.42,2.73]},{"s":208,"f1":0.634,"f2":0.027,"f3":-0.981,"c4":4,"c6":6,"c8":8,"t":"PEX","co":"Vigneux-de-Bretagne","vals":[3.0,2.64,2.35,3.46,3.57,1.25,2.35,2.62]},{"s":210,"f1":-0.975,"f2":-1.105,"f3":1.525,"c4":2,"c6":2,"c8":3,"t":"PEX","co":"Vigneux-de-Bretagne","vals":[4.0,1.25,3.68,1.97,3.37,1.0,1.72,2.5]},{"s":213,"f1":-2.878,"f2":0.049,"f3":-1.518,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"H\u00e9ric","vals":[1.0,1.0,1.55,2.59,1.55,1.0,1.55,2.07]},{"s":225,"f1":0.39,"f2":-0.654,"f3":0.06,"c4":4,"c6":6,"c8":8,"t":"PEX","co":"H\u00e9ric","vals":[2.0,3.03,3.57,3.5,3.57,1.32,1.76,2.25]},{"s":228,"f1":1.39,"f2":-0.622,"f3":-0.51,"c4":4,"c6":6,"c8":8,"t":"DHC - PC","co":"Saint-Mars-du-D\u00e9sert","vals":[5.0,2.93,2.0,2.51,4.0,1.25,2.3,3.11]},{"s":229,"f1":-0.398,"f2":-0.966,"f3":1.359,"c4":2,"c6":2,"c8":3,"t":"PEX","co":"Saint-Mars-du-D\u00e9sert","vals":[3.0,2.3,4.0,2.51,2.35,2.17,2.39,1.86]},{"s":244,"f1":-2.122,"f2":0.041,"f3":-0.334,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Casson","vals":[3.0,1.0,2.64,2.78,1.55,1.0,2.42,2.13]},{"s":247,"f1":0.74,"f2":-0.22,"f3":-1.004,"c4":4,"c6":6,"c8":8,"t":"PC","co":"Casson","vals":[3.0,3.57,2.55,3.66,3.0,1.15,2.85,2.07]},{"s":284,"f1":-2.394,"f2":-0.513,"f3":-1.066,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Petit-Mars","vals":[1.0,1.15,2.35,3.16,2.35,1.0,1.58,1.52]},{"s":285,"f1":0.674,"f2":-0.432,"f3":-0.651,"c4":4,"c6":4,"c8":6,"t":"PC","co":"Petit-Mars","vals":[3.0,3.1,1.55,1.68,2.35,2.77,1.58,3.38]},{"s":288,"f1":1.077,"f2":0.802,"f3":-0.094,"c4":4,"c6":4,"c8":6,"t":"PC","co":"Fay-de-Bretagne","vals":[1.0,2.86,2.35,2.51,4.0,2.17,2.3,3.11]},{"s":292,"f1":-0.985,"f2":-1.264,"f3":0.297,"c4":2,"c6":2,"c8":3,"t":"PEX","co":"Grandchamp-des-Fontaines","vals":[4.0,2.0,2.89,2.21,2.35,1.25,1.76,2.29]},{"s":294,"f1":-1.326,"f2":-1.036,"f3":0.015,"c4":2,"c6":2,"c8":3,"t":"PEX","co":"Grandchamp-des-Fontaines","vals":[4.0,1.52,2.64,2.38,2.35,1.15,2.14,2.0]},{"s":297,"f1":1.132,"f2":-0.588,"f3":-2.349,"c4":4,"c6":6,"c8":8,"t":"PEX","co":"Grandchamp-des-Fontaines","vals":[4.0,3.0,1.32,3.66,3.0,2.0,2.17,2.54]},{"s":301,"f1":-0.372,"f2":-0.261,"f3":0.644,"c4":4,"c6":6,"c8":8,"t":"DF","co":"Suc\u00e9-sur-Erdre","vals":[3.0,2.3,3.0,2.21,3.03,1.15,2.3,2.58]},{"s":306,"f1":-0.887,"f2":0.446,"f3":-0.401,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Suc\u00e9-sur-Erdre","vals":[3.0,2.05,3.0,3.31,1.55,1.25,2.55,2.61]},{"s":308,"f1":0.923,"f2":2.044,"f3":-1.763,"c4":4,"c6":6,"c8":8,"t":"PEX","co":"Suc\u00e9-sur-Erdre","vals":[4.0,1.89,1.32,3.46,3.0,1.25,3.42,3.78]},{"s":309,"f1":-2.487,"f2":1.469,"f3":-1.365,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Suc\u00e9-sur-Erdre","vals":[1.0,1.0,1.0,2.11,1.55,1.0,2.83,2.46]},{"s":311,"f1":-0.622,"f2":-1.074,"f3":-1.408,"c4":4,"c6":6,"c8":8,"t":"PEX","co":"Suc\u00e9-sur-Erdre","vals":[3.0,2.05,2.35,3.66,3.0,1.15,1.64,1.86]},{"s":317,"f1":0.202,"f2":0.275,"f3":0.258,"c4":4,"c6":6,"c8":8,"t":"PC - PEX","co":"Grandchamp-des-Fontaines","vals":[4.0,2.22,3.0,2.78,3.0,1.0,2.55,3.11]},{"s":321,"f1":1.791,"f2":-1.624,"f3":-0.227,"c4":3,"c6":3,"c8":4,"t":"PC","co":"Suc\u00e9-sur-Erdre","vals":[5.0,3.37,3.57,3.94,3.37,2.17,2.17,2.16]},{"s":325,"f1":-1.033,"f2":-1.78,"f3":1.498,"c4":2,"c6":2,"c8":3,"t":"PEX","co":"Les Touches","vals":[3.0,1.78,3.68,1.78,2.64,2.17,1.52,1.86]},{"s":328,"f1":2.796,"f2":-1.674,"f3":0.526,"c4":3,"c6":3,"c8":5,"t":"DF","co":"Nort-sur-Erdre","vals":[5.0,3.78,3.03,2.38,3.37,3.78,1.94,2.95]},{"s":286,"f1":0.617,"f2":2.015,"f3":1.747,"c4":4,"c6":5,"c8":7,"t":"PEX","co":"Petit-Mars","vals":[3.0,1.89,3.37,2.0,2.89,2.0,4.18,3.31]},{"s":323,"f1":0.394,"f2":-1.069,"f3":0.688,"c4":4,"c6":4,"c8":6,"t":"PC","co":"Petit-Mars","vals":[3.0,3.29,3.0,1.86,3.03,1.74,1.41,2.95]},{"s":218,"f1":-2.084,"f2":0.938,"f3":-0.711,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Fay-de-Bretagne","vals":[2.0,1.0,2.0,2.51,1.55,1.15,2.56,2.54]},{"s":249,"f1":-0.285,"f2":0.484,"f3":-1.888,"c4":4,"c6":6,"c8":8,"t":"PEX","co":"Casson","vals":[4.0,1.64,1.32,3.13,1.74,2.0,2.56,2.95]},{"s":250,"f1":-0.182,"f2":0.362,"f3":-2.138,"c4":4,"c6":6,"c8":8,"t":"PEX","co":"Casson","vals":[4.0,1.15,1.32,3.46,2.35,2.0,2.11,3.08]},{"s":224,"f1":0.902,"f2":0.237,"f3":-0.764,"c4":4,"c6":4,"c8":6,"t":"PEX","co":"H\u00e9ric","vals":[4.0,2.35,1.32,2.0,2.64,2.77,2.83,3.11]},{"s":322,"f1":0.533,"f2":0.202,"f3":-0.996,"c4":4,"c6":4,"c8":6,"t":"PEX","co":"H\u00e9ric","vals":[2.0,2.72,2.0,2.91,3.0,2.17,2.11,2.8]},{"s":199,"f1":0.805,"f2":2.026,"f3":-0.786,"c4":4,"c6":6,"c8":8,"t":"PEX","co":"Les Touches","vals":[4.0,1.32,1.74,2.78,1.9,3.0,3.54,3.83]},{"s":179,"f1":1.643,"f2":-0.267,"f3":0.381,"c4":3,"c6":3,"c8":5,"t":"PC","co":"Les Touches","vals":[3.0,3.48,3.0,2.63,3.57,2.3,2.38,2.9]},{"s":336,"f1":-1.786,"f2":-0.102,"f3":-0.868,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Nort-sur-Erdre","vals":[2.0,1.52,1.32,1.68,2.35,1.15,1.64,2.66]},{"s":331,"f1":-1.7,"f2":1.041,"f3":-0.963,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Nort-sur-Erdre","vals":[2.0,1.32,2.0,2.71,1.55,1.15,2.19,3.0]},{"s":261,"f1":0.698,"f2":1.712,"f3":-0.376,"c4":4,"c6":4,"c8":6,"t":"PEX","co":"Vigneux-de-Bretagne","vals":[2.0,2.05,2.0,2.63,3.37,2.0,3.18,3.31]},{"s":206,"f1":1.217,"f2":-0.395,"f3":0.33,"c4":4,"c6":4,"c8":6,"t":"PEX","co":"Vigneux-de-Bretagne","vals":[2.0,2.55,2.35,2.0,4.0,3.18,2.14,2.61]},{"s":299,"f1":2.33,"f2":2.032,"f3":1.101,"c4":4,"c6":4,"c8":6,"t":"PEX","co":"Suc\u00e9-sur-Erdre","vals":[1.0,3.57,2.64,1.68,4.0,2.77,3.03,4.19]},{"s":180,"f1":-0.203,"f2":0.426,"f3":-0.471,"c4":4,"c6":4,"c8":6,"t":"PEX","co":"Suc\u00e9-sur-Erdre","vals":[2.0,1.89,2.0,2.38,3.0,2.0,2.23,2.82]},{"s":300,"f1":1.966,"f2":0.872,"f3":0.721,"c4":3,"c6":3,"c8":5,"t":"PEX","co":"Suc\u00e9-sur-Erdre","vals":[2.0,3.57,3.0,2.45,4.0,2.17,2.81,3.37]},{"s":295,"f1":2.372,"f2":0.741,"f3":-0.11,"c4":3,"c6":3,"c8":5,"t":"PC","co":"Grandchamp-des-Fontaines","vals":[3.0,3.39,2.35,2.71,3.37,3.18,3.27,3.13]},{"s":341,"f1":0.316,"f2":-0.26,"f3":-0.158,"c4":3,"c6":3,"c8":5,"t":"PEX","co":"Saint-Mars-du-D\u00e9sert","vals":[3.0,2.22,2.35,2.51,2.64,2.77,2.81,2.16]},{"s":337,"f1":-1.224,"f2":0.836,"f3":-0.606,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Saint-Mars-du-D\u00e9sert","vals":[2.0,1.52,2.0,2.38,1.55,2.0,2.49,2.77]},{"s":338,"f1":1.389,"f2":1.424,"f3":-2.001,"c4":4,"c6":6,"c8":8,"t":"PEX","co":"Saint-Mars-du-D\u00e9sert","vals":[3.0,2.41,1.32,3.72,3.37,2.0,3.25,3.11]},{"s":242,"f1":2.854,"f2":-0.37,"f3":1.428,"c4":3,"c6":3,"c8":5,"t":"PC","co":"Grandchamp-des-Fontaines","vals":[4.0,3.9,3.37,2.06,4.0,3.0,2.85,3.18]},{"s":293,"f1":1.338,"f2":1.033,"f3":0.23,"c4":4,"c6":4,"c8":6,"t":"PEX","co":"Grandchamp-des-Fontaines","vals":[2.0,2.55,2.35,2.28,3.57,2.77,2.88,3.24]},{"s":304,"f1":0.271,"f2":0.217,"f3":-0.935,"c4":4,"c6":4,"c8":6,"t":"PC - PEX","co":"Suc\u00e9-sur-Erdre","vals":[2.0,2.55,1.55,2.28,3.0,2.17,2.05,2.95]},{"s":185,"f1":-0.775,"f2":1.486,"f3":-0.647,"c4":1,"c6":1,"c8":1,"t":"PEX","co":"Suc\u00e9-sur-Erdre","vals":[2.0,1.74,2.0,2.63,2.35,1.15,2.81,3.11]},{"s":253,"f1":2.33,"f2":0.644,"f3":0.299,"c4":3,"c6":3,"c8":5,"t":"PC - PEX","co":"Treilli\u00e8res","vals":[3.0,3.29,3.0,2.91,3.0,3.48,3.0,3.25]},{"s":251,"f1":0.596,"f2":0.776,"f3":-0.478,"c4":4,"c6":4,"c8":6,"t":"PEX","co":"Treilli\u00e8res","vals":[2.0,2.05,2.0,2.45,3.0,2.77,2.26,3.27]},{"s":333,"f1":3.078,"f2":-0.095,"f3":-0.147,"c4":3,"c6":3,"c8":5,"t":"PC","co":"Nort-sur-Erdre","vals":[4.0,3.9,3.0,3.46,3.57,3.18,2.98,2.95]}],"vars":[{"name":"Continuit\u00e9","f1":0.3644287083394087,"f2":-0.5283201395177961},{"name":"Diversit\u00e9","f1":0.8243666008998858,"f2":-0.25499852264578565},{"name":"Densit\u00e9","f1":0.015284899725872773,"f2":-0.07611230199960939},{"name":"Vides","f1":0.3184690581243727,"f2":0.1814800688009059},{"name":"Mutation","f1":0.7811367140197719,"f2":-0.10075058403204284},{"name":"Urbanit\u00e9","f1":0.7893322106148769,"f2":-0.12966414048805286},{"name":"Communs","f1":0.3225864944901905,"f2":0.7584012165342261},{"name":"Paysages","f1":0.4329960243555696,"f2":0.6524608327839331}],"var_explained":{"F1":30.49,"F2":17.63,"F3":14.23},"col_names":["Continuit\u00e9","Diversit\u00e9","Densit\u00e9","Vides","Mutation","Urbanit\u00e9","Communs","Paysages"],"profiles_c4":{"1":{"p":[1.94,1.57,2.24,2.47,2.01,1.2,2.24,2.62],"n":32,"typos":[["PEX",25],["PC",6],["DHC",1]]},"2":{"p":[3.56,1.37,3.0,1.77,2.24,1.5,1.87,2.28],"n":27,"typos":[["PEX",25],["PC",2]]},"3":{"p":[3.79,3.18,2.74,2.61,3.44,3.0,2.49,2.66],"n":33,"typos":[["PC",15],["PEX",9],["DF",6]]},"4":{"p":[2.98,2.3,2.24,2.51,3.04,1.87,2.65,3.06],"n":57,"typos":[["PEX",37],["PC",11],["DHC",4]]}},"profiles_c6":{"1":{"p":[1.94,1.57,2.24,2.47,2.01,1.2,2.24,2.62],"n":32,"typos":[["PEX",25],["PC",6],["DHC",1]]},"2":{"p":[3.56,1.37,3.0,1.77,2.24,1.5,1.87,2.28],"n":27,"typos":[["PEX",25],["PC",2]]},"3":{"p":[3.79,3.18,2.74,2.61,3.44,3.0,2.49,2.66],"n":33,"typos":[["PC",15],["PEX",9],["DF",6]]},"4":{"p":[2.7,2.61,2.08,2.11,3.28,2.18,2.31,3.24],"n":27,"typos":[["PEX",13],["PC",9],["DHC",3]]},"5":{"p":[2.29,1.68,3.21,2.08,2.58,1.71,4.1,3.06],"n":7,"typos":[["PEX",7]]},"6":{"p":[3.52,2.13,2.15,3.11,2.89,1.56,2.62,2.86],"n":23,"typos":[["PEX",17],["PC",2],["DHC",1]]}},"profiles_c8":{"1":{"p":[1.94,1.57,2.24,2.47,2.01,1.2,2.24,2.62],"n":32,"typos":[["PEX",25],["PC",6],["DHC",1]]},"2":{"p":[2.38,1.22,3.66,1.47,1.99,1.11,2.14,2.5],"n":8,"typos":[["PEX",8]]},"3":{"p":[4.05,1.43,2.72,1.89,2.35,1.67,1.75,2.19],"n":19,"typos":[["PEX",17],["PC",2]]},"4":{"p":[3.82,3.29,2.85,2.51,2.87,2.72,1.89,2.13],"n":11,"typos":[["PC",7],["DF",2],["PEX",2]]},"5":{"p":[3.77,3.12,2.68,2.66,3.72,3.15,2.79,2.93],"n":22,"typos":[["PC",8],["PEX",7],["DF",4]]},"6":{"p":[2.7,2.61,2.08,2.11,3.28,2.18,2.31,3.24],"n":27,"typos":[["PEX",13],["PC",9],["DHC",3]]},"7":{"p":[2.29,1.68,3.21,2.08,2.58,1.71,4.1,3.06],"n":7,"typos":[["PEX",7]]},"8":{"p":[3.52,2.13,2.15,3.11,2.89,1.56,2.62,2.86],"n":23,"typos":[["PEX",17],["PC",2],["DHC",1]]}}};
+
+const COLORS={8:['#E63946','#457B9D','#2A9D8F','#E9C46A','#F4A261','#7B68EE','#A8DADC','#6A4C93'],6:['#E63946','#457B9D','#2A9D8F','#E9C46A','#F4A261','#6A4C93'],4:['#E63946','#457B9D','#2A9D8F','#E9C46A']};
+const SHORT=['Continuité','Diversité','Densité','Vides','Mutation','Urbanité','Communs','Paysages'];
+const TYPO_SHAPE={'PEX':'circle','PC':'diamond','DF':'square','DHC':'triangle','PC - PEX':'diamond','DF - PC':'square','DHC - PC':'triangle','DHC - PEX':'triangle'};
+const VAR_EXPL={'f1':30.49,'f2':17.63,'f3':14.23};
+
+let currentCut='c8', axisX='f1', axisY='f2', highlightClass=null;
+
+function cc(cl,cut){const n=parseInt(cut.replace('c',''));return COLORS[n][(cl-1)%COLORS[n].length]}
+
+function setCut(c){currentCut=c;highlightClass=null;document.querySelectorAll('.btn-group button').forEach(b=>b.classList.remove('active'));document.getElementById('btn-'+c).classList.add('active');render()}
+function setAxes(x,y){axisX=x;axisY=y;document.querySelectorAll('.axes-toggle button').forEach(b=>b.classList.remove('active'));document.getElementById('ax-'+x.charAt(1)+y.charAt(1)).classList.add('active');render()}
+
+function render(){renderScatter();renderCircle();renderLegend();renderProfiles()}
+
+function renderLegend(){
+  const n=parseInt(currentCut.replace('c',''));
+  const profs=D['profiles_'+currentCut];
+  const leg=document.getElementById('legend');
+  leg.innerHTML='';
+  for(let i=1;i<=n;i++){
+    const p=profs[String(i)];if(!p)continue;
+    const color=cc(i,currentCut);
+    const item=document.createElement('div');
+    item.className='legend-item'+(highlightClass&&highlightClass!==i?' dimmed':'');
+    item.innerHTML='<div class="legend-dot" style="background:'+color+'"></div>Cl. '+i+' ('+p.n+')';
+    item.onclick=()=>{highlightClass=highlightClass===i?null:i;render()};
+    leg.appendChild(item);
+  }
+}
+
+function shapeSymbol(type,cx,cy,r,color,opacity){
+  const t=TYPO_SHAPE[type]||'circle';
+  const o=opacity;
+  if(t==='circle') return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" opacity="${o}" stroke="${color}" stroke-width="0.5" stroke-opacity="0.8"/>`;
+  if(t==='diamond'){const s=r*1.3;return `<polygon points="${cx},${cy-s} ${cx+s},${cy} ${cx},${cy+s} ${cx-s},${cy}" fill="${color}" opacity="${o}" stroke="${color}" stroke-width="0.5" stroke-opacity="0.8"/>`}
+  if(t==='square'){const s=r*1.1;return `<rect x="${cx-s}" y="${cy-s}" width="${s*2}" height="${s*2}" fill="${color}" opacity="${o}" stroke="${color}" stroke-width="0.5" stroke-opacity="0.8"/>`}
+  if(t==='triangle'){const s=r*1.4;return `<polygon points="${cx},${cy-s} ${cx+s},${cy+s*0.7} ${cx-s},${cy+s*0.7}" fill="${color}" opacity="${o}" stroke="${color}" stroke-width="0.5" stroke-opacity="0.8"/>`}
+  return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" opacity="${o}"/>`;
+}
+
+function renderScatter(){
+  const panel=document.getElementById('acp-panel');
+  const W=Math.max(640,panel.clientWidth||700);
+  const H=520;
+  const m={top:50,right:40,bottom:50,left:60};
+  const pw=W-m.left-m.right, ph=H-m.top-m.bottom;
+
+  const pts=D.points;
+  const xVals=pts.map(p=>p[axisX]), yVals=pts.map(p=>p[axisY]);
+  const xMin=Math.min(...xVals), xMax=Math.max(...xVals);
+  const yMin=Math.min(...yVals), yMax=Math.max(...yVals);
+  const xPad=(xMax-xMin)*0.08, yPad=(yMax-yMin)*0.08;
+  const xR=[xMin-xPad,xMax+xPad], yR=[yMin-yPad,yMax+yPad];
+
+  const sx=v=>m.left+(v-xR[0])/(xR[1]-xR[0])*pw;
+  const sy=v=>m.top+(1-(v-yR[0])/(yR[1]-yR[0]))*ph;
+
+  let svg=`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`;
+
+  // Grid
+  for(let v=Math.ceil(xR[0]);v<=Math.floor(xR[1]);v++){
+    const x=sx(v);
+    svg+=`<line x1="${x}" y1="${m.top}" x2="${x}" y2="${H-m.bottom}" stroke="#21262d" stroke-width="1"/>`;
+    svg+=`<text x="${x}" y="${H-m.bottom+16}" text-anchor="middle" style="font-family:JetBrains Mono;font-size:10px;fill:#484f58">${v}</text>`;
+  }
+  for(let v=Math.ceil(yR[0]);v<=Math.floor(yR[1]);v++){
+    const y=sy(v);
+    svg+=`<line x1="${m.left}" y1="${y}" x2="${W-m.right}" y2="${y}" stroke="#21262d" stroke-width="1"/>`;
+    svg+=`<text x="${m.left-8}" y="${y+3}" text-anchor="end" style="font-family:JetBrains Mono;font-size:10px;fill:#484f58">${v}</text>`;
+  }
+
+  // Zero axes
+  if(xR[0]<0&&xR[1]>0) svg+=`<line x1="${sx(0)}" y1="${m.top}" x2="${sx(0)}" y2="${H-m.bottom}" stroke="#30363d" stroke-width="1.5"/>`;
+  if(yR[0]<0&&yR[1]>0) svg+=`<line x1="${m.left}" y1="${sy(0)}" x2="${W-m.right}" y2="${sy(0)}" stroke="#30363d" stroke-width="1.5"/>`;
+
+  // Axis labels
+  const axXLabel=axisX.toUpperCase()+' ('+VAR_EXPL[axisX].toFixed(1)+'%)';
+  const axYLabel=axisY.toUpperCase()+' ('+VAR_EXPL[axisY].toFixed(1)+'%)';
+  svg+=`<text x="${m.left+pw/2}" y="${H-6}" text-anchor="middle" style="font-family:DM Sans;font-size:13px;fill:#8b949e;font-weight:500">${axXLabel}</text>`;
+  svg+=`<text x="14" y="${m.top+ph/2}" text-anchor="middle" transform="rotate(-90,14,${m.top+ph/2})" style="font-family:DM Sans;font-size:13px;fill:#8b949e;font-weight:500">${axYLabel}</text>`;
+
+  // Compute convex hulls per class
+  const n=parseInt(currentCut.replace('c',''));
+  for(let cl=1;cl<=n;cl++){
+    const clPts=pts.filter(p=>p[currentCut]===cl);
+    if(clPts.length<3)continue;
+    const hullPts=clPts.map(p=>({x:sx(p[axisX]),y:sy(p[axisY])}));
+    const hull=convexHull(hullPts);
+    if(hull.length<3)continue;
+    const color=cc(cl,currentCut);
+    const opacity=highlightClass&&highlightClass!==cl?0.03:0.08;
+    svg+=`<polygon points="${hull.map(h=>h.x+','+h.y).join(' ')}" fill="${color}" opacity="${opacity}" stroke="${color}" stroke-width="1" stroke-opacity="${highlightClass&&highlightClass!==cl?0.05:0.2}"/>`;
+  }
+
+  // Points (draw dimmed first, then highlighted)
+  const sorted=[...pts].sort((a,b)=>{
+    if(highlightClass){
+      const aH=a[currentCut]===highlightClass?1:0;
+      const bH=b[currentCut]===highlightClass?1:0;
+      return aH-bH;
+    }
+    return 0;
+  });
+
+  sorted.forEach((p,i)=>{
+    const cx=sx(p[axisX]),cy=sy(p[axisY]);
+    const cl=p[currentCut];
+    const color=cc(cl,currentCut);
+    const dim=highlightClass&&highlightClass!==cl;
+    const opacity=dim?0.12:0.75;
+    const r=dim?3:4.5;
+    svg+=shapeSymbol(p.t,cx,cy,r,color,opacity);
+    // Invisible hover target
+    svg+=`<circle cx="${cx}" cy="${cy}" r="8" fill="transparent" onmouseenter="showTip(event,${pts.indexOf(p)})" onmouseleave="hideTip()" style="cursor:pointer"/>`;
+  });
+
+  // Interpretation labels
+  const interp={
+    'f1f2':[
+      {x:xR[1]-0.3,y:0,text:'Vitalité urbaine →',anchor:'end',size:11,color:'#388bfd'},
+      {x:xR[0]+0.3,y:0,text:'← Inertie résidentielle',anchor:'start',size:11,color:'#388bfd'},
+      {x:0,y:yR[1]-0.15,text:'↑ Cadre végétal',anchor:'middle',size:11,color:'#238636'},
+      {x:0,y:yR[0]+0.25,text:'Urbanité sèche ↓',anchor:'middle',size:11,color:'#238636'}
+    ],
+    'f1f3':[
+      {x:xR[1]-0.3,y:0,text:'Vitalité urbaine →',anchor:'end',size:11,color:'#388bfd'},
+      {x:xR[0]+0.3,y:0,text:'← Inertie résidentielle',anchor:'start',size:11,color:'#388bfd'},
+      {x:0,y:yR[1]-0.15,text:'↑ Densité forte',anchor:'middle',size:11,color:'#da3633'},
+      {x:0,y:yR[0]+0.25,text:'Densité faible ↓',anchor:'middle',size:11,color:'#da3633'}
+    ]
+  };
+  const key=axisX.charAt(1)+axisY.charAt(1);
+  const labels=interp['f'+key]||[];
+  labels.forEach(l=>{
+    svg+=`<text x="${sx(l.x)}" y="${sy(l.y)}" text-anchor="${l.anchor}" style="font-family:DM Sans;font-size:${l.size}px;fill:${l.color};font-weight:500;opacity:0.5">${l.text}</text>`;
+  });
+
+  // Shape legend
+  const shapeLegX=W-m.right-150, shapeLegY=m.top+8;
+  const shapes=[['PEX','circle','●'],['PC','diamond','◆'],['DF','square','■'],['DHC','triangle','▲']];
+  shapes.forEach((sh,i)=>{
+    svg+=`<text x="${shapeLegX}" y="${shapeLegY+i*16}" style="font-family:JetBrains Mono;font-size:11px;fill:#8b949e">${sh[2]} ${sh[0]}</text>`;
+  });
+
+  svg+=`</svg>`;
+  panel.innerHTML=svg;
+}
+
+function renderCircle(){
+  const cont=document.getElementById('circle-container');
+  const S=280, cx=S/2, cy=S/2, R=S/2-30;
+
+  let svg=`<svg width="${S}" height="${S}" xmlns="http://www.w3.org/2000/svg">`;
+  // Circle
+  svg+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#30363d" stroke-width="1"/>`;
+  svg+=`<circle cx="${cx}" cy="${cy}" r="${R*0.5}" fill="none" stroke="#21262d" stroke-width="0.5" stroke-dasharray="3,3"/>`;
+  // Axes
+  svg+=`<line x1="${cx-R}" y1="${cy}" x2="${cx+R}" y2="${cy}" stroke="#21262d" stroke-width="1"/>`;
+  svg+=`<line x1="${cx}" y1="${cy-R}" x2="${cx}" y2="${cy+R}" stroke="#21262d" stroke-width="1"/>`;
+
+  const xKey=axisX, yKey=axisY;
+  const varsToUse=D.vars;
+
+  varsToUse.forEach(v=>{
+    const vx=v[xKey]||v.f1, vy=v[yKey]||v.f2;
+    const px=cx+vx*R, py=cy-vy*R;
+    const len=Math.sqrt(vx*vx+vy*vy);
+    const hue=len>0.6?'#58a6ff':len>0.3?'#8b949e':'#484f58';
+    svg+=`<line x1="${cx}" y1="${cy}" x2="${px}" y2="${py}" stroke="${hue}" stroke-width="1.5" opacity="0.7"/>`;
+    svg+=`<circle cx="${px}" cy="${py}" r="3" fill="${hue}"/>`;
+    // Label
+    const offset=8;
+    const lx=px+(vx>0?offset:-offset);
+    const ly=py+(vy>0?offset:-offset);
+    const anchor=vx>0?'start':'end';
+    svg+=`<text x="${lx}" y="${ly+3}" text-anchor="${anchor}" style="font-family:JetBrains Mono;font-size:10px;fill:${hue};font-weight:500">${v.name}</text>`;
+  });
+
+  // Axis labels
+  const axXL=axisX.toUpperCase(), axYL=axisY.toUpperCase();
+  svg+=`<text x="${cx+R+4}" y="${cy+4}" style="font-family:JetBrains Mono;font-size:10px;fill:#484f58">${axXL}</text>`;
+  svg+=`<text x="${cx}" y="${cy-R-6}" text-anchor="middle" style="font-family:JetBrains Mono;font-size:10px;fill:#484f58">${axYL}</text>`;
+
+  svg+=`</svg>`;
+  cont.innerHTML=svg;
+}
+
+function renderProfiles(){
+  const grid=document.getElementById('profiles-grid');
+  const n=parseInt(currentCut.replace('c',''));
+  const profiles=D['profiles_'+currentCut];
+  grid.innerHTML='';
+  for(let i=1;i<=n;i++){
+    const p=profiles[String(i)];if(!p)continue;
+    const color=cc(i,currentCut);
+    let typoStr=p.typos.map(t=>t[0]+' ('+t[1]+')').join(', ');
+    let bars='';
+    p.p.forEach((val,j)=>{
+      const pct=(val/5)*100;
+      bars+=`<div class="bar-row"><div class="bar-label">${SHORT[j]}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color};opacity:.75"></div></div><div class="bar-value">${val.toFixed(1)}</div></div>`;
+    });
+    const card=document.createElement('div');
+    card.className='profile-card';
+    card.innerHTML=`<div class="card-header"><span class="class-badge" style="background:${color}">Classe ${i}</span><span class="count">${p.n} secteurs</span></div><div class="typos">${typoStr}</div>${bars}`;
+    grid.appendChild(card);
+  }
+}
+
+function showTip(evt,idx){
+  const p=D.points[idx];
+  const color=cc(p[currentCut],currentCut);
+  let valsHtml='';
+  p.vals.forEach((v,i)=>{valsHtml+=`<span class="tt-val-label">${SHORT[i]}</span><span class="tt-val-num">${v.toFixed(1)}</span>`});
+  const tt=document.getElementById('tooltip');
+  tt.innerHTML=`<div class="tt-sector">Secteur ${p.s}</div><div class="tt-info"><span style="color:${color}">● Classe ${p[currentCut]}</span> · ${p.t}<br>${p.co}</div><div class="tt-vals">${valsHtml}</div>`;
+  tt.style.display='block';
+  const bx=document.body.getBoundingClientRect();
+  let lx=evt.clientX+14, ly=evt.clientY-10;
+  if(lx+240>window.innerWidth)lx=evt.clientX-254;
+  tt.style.left=lx+'px';tt.style.top=ly+'px';
+}
+function hideTip(){document.getElementById('tooltip').style.display='none'}
+
+// Convex hull (Graham scan)
+function convexHull(points){
+  if(points.length<3)return points;
+  const pts=[...points].sort((a,b)=>a.x-b.x||a.y-b.y);
+  const cross=(O,A,B)=>(A.x-O.x)*(B.y-O.y)-(A.y-O.y)*(B.x-O.x);
+  const lower=[];
+  for(const p of pts){while(lower.length>=2&&cross(lower[lower.length-2],lower[lower.length-1],p)<=0)lower.pop();lower.push(p)}
+  const upper=[];
+  for(let i=pts.length-1;i>=0;i--){const p=pts[i];while(upper.length>=2&&cross(upper[upper.length-2],upper[upper.length-1],p)<=0)upper.pop();upper.push(p)}
+  upper.pop();lower.pop();
+  return lower.concat(upper);
+}
+
+window.addEventListener('resize',()=>{renderScatter();renderCircle()});
+render();
+</script>
+</body>
+</html>
